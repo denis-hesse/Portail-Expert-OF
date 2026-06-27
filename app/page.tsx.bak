@@ -1,0 +1,44 @@
+'use client'
+
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+
+export default function Home() {
+  const router = useRouter()
+
+  useEffect(() => {
+    const supabase = createClient()
+
+    if (window.location.hash.includes('access_token')) {
+      // Attendre que supabase-js traite le hash et émette SIGNED_IN
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          subscription.unsubscribe()
+          router.replace('/accept-invite')
+        } else if (event === 'SIGNED_OUT') {
+          subscription.unsubscribe()
+          router.replace('/login')
+        }
+      })
+      // Timeout de sécurité si l'événement ne vient pas
+      setTimeout(() => {
+        subscription.unsubscribe()
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          router.replace(session ? '/accept-invite' : '/login')
+        })
+      }, 3000)
+      return
+    }
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      router.replace(session ? '/dashboard' : '/login')
+    })
+  }, [router])
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+    </div>
+  )
+}
