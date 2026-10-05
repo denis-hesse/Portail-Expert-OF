@@ -19,6 +19,15 @@ export interface FicheReference {
   url: string
 }
 
+// En-tête de fiche pour la passe 1 (sélection) : propriétés indexées, jamais le corps (§0.5).
+export interface FicheHeader extends FicheReference {
+  summary: string
+  searchIndex: string
+  domain: string
+  theme: string
+  subtheme: string
+}
+
 export interface SourceRef {
   name: string
   url: string

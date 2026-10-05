@@ -40,7 +40,7 @@ async function testNotion() {
 // â”€â”€ 3. Anthropic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function testAnthropic() {
   const Anthropic = (await import('@anthropic-ai/sdk')).default
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  const client = new Anthropic({ apiKey: process.env.APP_ANTHROPIC_KEY })
   const msg = await client.messages.create({
     model: 'claude-sonnet-4-6',
     max_tokens: 16,

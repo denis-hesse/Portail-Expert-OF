@@ -21,8 +21,6 @@ export async function POST(request: NextRequest) {
 
     const { question, conversationId } = await request.json()
     if (!question?.trim()) return NextResponse.json({ error: 'Question vide' }, { status: 400 })
-    const _k = process.env.ANTHROPIC_API_KEY
-    console.log('[chat] key len:', _k?.length, '| start:', _k?.slice(0,14))
 
 
     // Récupérer l'historique existant depuis Supabase

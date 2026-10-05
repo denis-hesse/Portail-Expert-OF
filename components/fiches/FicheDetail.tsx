@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
+import { markdownComponents, remarkPlugins } from '@/components/markdown'
 import { Fiche } from '@/lib/types'
 
 function stripSourcesSection(content: string): string {
@@ -65,14 +66,14 @@ export default function FicheDetail({ id }: { id: string }) {
           <div style={{ background: 'var(--accent-light)', borderRadius: 10, padding: '12px 16px', marginBottom: 20 }}>
             <p style={{ fontSize: 11, fontWeight: 500, color: 'var(--accent)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Résumé</p>
             <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.65 }} className="prose-response">
-              <ReactMarkdown>{fiche.summary}</ReactMarkdown>
+              <ReactMarkdown remarkPlugins={remarkPlugins} components={markdownComponents}>{fiche.summary}</ReactMarkdown>
             </div>
           </div>
         )}
 
         {/* Contenu */}
         <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.65, marginBottom: 24 }} className="prose-response">
-          <ReactMarkdown>{stripSourcesSection(fiche.content)}</ReactMarkdown>
+          <ReactMarkdown remarkPlugins={remarkPlugins} components={markdownComponents}>{stripSourcesSection(fiche.content)}</ReactMarkdown>
         </div>
 
         {/* Sources */}
