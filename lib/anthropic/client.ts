@@ -1,25 +1,51 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { FicheReference, ChatPassResult } from '@/lib/types'
+import { FicheReference, FicheHeader, ChatPassResult } from '@/lib/types'
 import { getSystemPrompt } from '@/lib/config/getSystemPrompt'
 
 const anthropic = new Anthropic({ apiKey: process.env.APP_ANTHROPIC_KEY })
-const MODEL = 'claude-sonnet-4-6'
+// Routage à deux modèles (Alternative Supabase → Notion, §11.1, arbitré le 20/09/2026).
+// Niveaux d'effort à confirmer sur le banc d'essai.
+const MODEL_PASS1  = 'claude-sonnet-5'
+const EFFORT_PASS1 = 'low' as const
+const MODEL_PASS2  = 'claude-opus-5'
+const EFFORT_PASS2 = 'medium' as const
+
+// Raisonnement adaptatif actif : la réponse peut contenir des blocs `thinking`
+// avant le texte. On ne garde que les blocs `text`.
+function textOf(msg: Anthropic.Message): string {
+  return msg.content
+    .filter((b): b is Anthropic.TextBlock => b.type === 'text')
+    .map((b) => b.text)
+    .join('')
+}
 
 type HistoryMessage = { role: 'user' | 'assistant'; content: string }
 
 export async function chatTwoPasses(
   question: string,
-  fichesHeaders: FicheReference[]
+  fichesHeaders: FicheHeader[]
 ): Promise<ChatPassResult> {
   const systemPrompt = await getSystemPrompt()
 
   const headersText = fichesHeaders
-    .map((f, i) => `${i + 1}. [ID: ${f.id}] ${f.title}`)
-    .join('\n')
+    .map((f, i) => {
+      const lines = [`${i + 1}. [ID: ${f.id}] ${f.title}`]
+      const classement = [
+        f.domain && `Domaine : ${f.domain}`,
+        f.theme && `Thème : ${f.theme}`,
+        f.subtheme && `Sous-thème : ${f.subtheme}`,
+      ].filter(Boolean).join(' | ')
+      if (classement) lines.push(`   ${classement}`)
+      if (f.summary) lines.push(`   Résumé : ${f.summary}`)
+      if (f.searchIndex) lines.push(`   Index : ${f.searchIndex}`)
+      return lines.join('\n')
+    })
+    .join('\n\n')
 
   const pass1 = await anthropic.messages.create({
-    model: MODEL,
-    max_tokens: 1024,
+    model: MODEL_PASS1,
+    max_tokens: 4096,
+    output_config: { effort: EFFORT_PASS1 },
     system: systemPrompt,
     messages: [
       {
@@ -29,7 +55,7 @@ export async function chatTwoPasses(
     ],
   })
 
-  const pass1Text = pass1.content[0].type === 'text' ? pass1.content[0].text : ''
+  const pass1Text = textOf(pass1)
   let selectedIds: string[] = []
   try {
     const jsonMatch = pass1Text.match(/\{[\s\S]*\}/)
@@ -66,13 +92,14 @@ export async function chatSynthesis(
   ]
 
   const pass2 = await anthropic.messages.create({
-    model: MODEL,
-    max_tokens: 4096,
+    model: MODEL_PASS2,
+    max_tokens: 16000,
+    output_config: { effort: EFFORT_PASS2 },
     system: systemPrompt,
     messages,
   })
 
-  const responseText = pass2.content[0].type === 'text' ? pass2.content[0].text : ''
+  const responseText = textOf(pass2)
 
   // Extraire les fiches citées depuis les liens inline
   const linkRegex = /\[([^\]]+)\]\((\/dashboard\/fiches\/[^)]+)\)/g

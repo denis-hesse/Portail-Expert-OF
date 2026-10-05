@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Message } from '@/lib/types'
 import ReactMarkdown from 'react-markdown'
+import { markdownComponents, remarkPlugins } from '@/components/markdown'
 
 interface Props { conversationId?: string }
 
@@ -184,7 +185,7 @@ export default function ChatInterface({ conversationId }: Props) {
                     }}
                     className="prose-response"
                   >
-                    <ReactMarkdown>{cleanContent(msg.content)}</ReactMarkdown>
+                    <ReactMarkdown remarkPlugins={remarkPlugins} components={markdownComponents}>{cleanContent(msg.content)}</ReactMarkdown>
                   </div>
                 )}
               </div>

@@ -3,8 +3,9 @@ import { createClient } from '@/lib/supabase/server'
 import { getSystemPrompt } from '@/lib/config/getSystemPrompt'
 import Anthropic from '@anthropic-ai/sdk'
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-const MODEL = 'claude-sonnet-4-6'
+const anthropic = new Anthropic({ apiKey: process.env.APP_ANTHROPIC_KEY })
+// Modèle de la passe 2 (§11.1), celle qui reçoit l'historique de conversation.
+const MODEL = 'claude-opus-5'
 
 export async function POST(request: NextRequest) {
   try {
